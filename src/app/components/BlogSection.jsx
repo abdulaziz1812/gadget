@@ -1,9 +1,7 @@
 "use client";
 
-
-import { useGetBlogsQuery } from "@/src/redux/api/blogApi";
+import { useGetBlogsQuery } from "@/src/redux/api/api";
 import BlogCard from "./BlogCards";
-
 
 const BlogSection = () => {
   const { data: posts = [], isLoading, isError } = useGetBlogsQuery();
@@ -11,8 +9,12 @@ const BlogSection = () => {
   return (
     <section className="py-10 w-8/12 mx-auto ">
       <div className="max-w-6xl mx-auto px-4">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">Latest Blogs</h2>
-        <p className="text-gray-600 mb-8 text-center">Stay updated with the latest tech trends and gadget reviews.</p>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">
+          Latest Blogs
+        </h2>
+        <p className="text-gray-600 mb-8 text-center">
+          Stay updated with the latest tech trends and gadget reviews.
+        </p>
 
         {isLoading && <p>Loading...</p>}
         {isError && <p>Failed to load blogs.</p>}

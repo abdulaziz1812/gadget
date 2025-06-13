@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetBlogByIdQuery } from "@/src/redux/api/blogApi";
+import { useGetBlogByIdQuery } from "@/src/redux/api/api";
 import { useParams } from "next/navigation";
 
 export default function BlogDetail() {
@@ -8,7 +8,10 @@ export default function BlogDetail() {
   const { data: post, isLoading, isError } = useGetBlogByIdQuery(id);
 
   if (isLoading) return <div className="text-center py-10">Loading...</div>;
-  if (isError || !post) return <div className="text-center text-red-500 py-10">Blog not found.</div>;
+  if (isError || !post)
+    return (
+      <div className="text-center text-red-500 py-10">Blog not found.</div>
+    );
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -30,7 +33,10 @@ export default function BlogDetail() {
       {post.tags?.length > 0 && (
         <div className="flex gap-2 flex-wrap mb-8">
           {post.tags.map((tag, idx) => (
-            <span key={idx} className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
+            <span
+              key={idx}
+              className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full"
+            >
               #{tag}
             </span>
           ))}

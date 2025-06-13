@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useGetBlogByIdQuery } from "@/src/redux/api/blogApi";
+import { useGetBlogByIdQuery } from "@/src/redux/api/api";
 import { useParams } from "next/navigation";
 
 export default function BlogDetail() {
@@ -67,7 +67,9 @@ export default function BlogDetail() {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-md shadow-md">
       {/* Title */}
-      <h1 className="text-4xl font-extrabold mb-6 text-gray-900">{post.title}</h1>
+      <h1 className="text-4xl font-extrabold mb-6 text-gray-900">
+        {post.title}
+      </h1>
 
       {/* Author + Date */}
       <div className="text-sm text-gray-500 mb-8">
