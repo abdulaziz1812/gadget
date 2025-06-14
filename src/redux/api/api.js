@@ -2,10 +2,15 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const api = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3000/api" }), // remove /blogs here
+  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3000/api" }), 
+  
+  tagTypes: ['Posts'],
+  
+  
   endpoints: (builder) => ({
     getBlogs: builder.query({
       query: () => "blogs",
+      providesTags: ['Posts'],
     }),
     getBlogById: builder.query({
       query: (id) => `blogs/${id}`,
@@ -31,6 +36,32 @@ export const api = createApi({
         body: postData,
       }),
     }),
+    deletePost: builder.mutation({
+      query: (id) => ({
+        url: `blogs/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ['Posts']
+    }),
+    updatePost: builder.mutation({
+      query: ({ id, updatedPost }) => ({
+        url: `posts/${id}`,
+        method: 'PUT',
+        body: updatedPost,
+      }),
+      invalidatesTags: ['Posts'],
+    }),
+    addComment: builder.mutation({
+      query: ({ id, comment }) => ({
+        url: `blogs/${id}/comments`,
+        method: "POST",
+        body: comment,
+      }),
+      invalidatesTags: ["Posts"], // or refetchBlogById if needed
+    }),
+
+
+
   }),
 });
 
@@ -40,4 +71,9 @@ export const {
   useRegisterUserMutation,
   // useLoginUserMutation,
   useCreatePostMutation,
+  useDeletePostMutation,
+useUpdatePostMutation,
+useAddCommentMutation,
+
+
 } = api;

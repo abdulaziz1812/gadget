@@ -1,16 +1,33 @@
-'use client'
+'use client';
 
-import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useCreatePostMutation } from "@/src/redux/api/api";
+import toast from "react-hot-toast";
+import { ClipLoader } from "react-spinners";
 
 export default function CreatePostPage() {
-  const { data: session } = useSession();
-  const author = session?.user?.name || session?.user?.email || "Unknown";
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
 
   const [createPost] = useCreatePostMutation();
-  const router = useRouter();
+
+  if (status === "loading") return (
+    <div className="flex justify-center items-center py-10 min-h-screen">
+      <ClipLoader size={50} />
+    </div>
+  );
+  if (!session) return null;
+
+  const author = session.user.name || "Unknown";
+  const email = session.user.email;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,24 +36,26 @@ export default function CreatePostPage() {
     const title = form.title.value;
     const snippet = form.snippet.value;
     const content = form.content.value;
-    const tags = form.tags.value.split(",").map(tag => tag.trim());
-
-    const postData = {
-      title,
-      snippet,
-      content,
-      tags,
-      author,
-      date: new Date().toISOString(),
-    };
+    const tags = form.tags.value
+      ? form.tags.value.split(",").map((tag) => tag.trim())
+      : [];
 
     try {
-      await createPost(postData).unwrap();
+      await createPost({
+        title,
+        snippet,
+        content,
+        tags,
+        author,
+        email,
+        date: new Date().toISOString(),
+      }).unwrap();
+
       toast.success("Post created successfully!");
-      router.push("/");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create post");
+      router.push("/my_posts");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create post.");
     }
   };
 

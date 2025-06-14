@@ -48,7 +48,7 @@ providers: [
     async signIn({ user, account }) {
       const usersCollection = await dbConnect("users");
 
-      const provider = account.provider; // e.g., "google", "github", "credentials"
+      const provider = account.provider; 
 
       const filter =
         provider === "credentials"

@@ -1,94 +1,90 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useGetBlogByIdQuery } from "@/src/redux/api/api";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
+import { useGetBlogByIdQuery } from "@/src/redux/api/api";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
+import { ClipLoader } from "react-spinners";
 
 export default function BlogDetail() {
   const { id } = useParams();
   const { data: post, isLoading, isError, refetch } = useGetBlogByIdQuery(id);
+  const { data: session } = useSession();
 
-  // Comment form state
-  const [name, setName] = useState("");
   const [message, setMessage] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle form submit
-  async function handleSubmit(e) {
+  if (isLoading) return (
+    <div className="flex justify-center items-center py-10 min-h-screen">
+      <ClipLoader size={50} />
+    </div>
+  );
+  if (isError || !post)
+    return <div className="text-center text-red-500 py-10">Blog not found.</div>;
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
 
-    if (!name.trim() || !message.trim()) {
-      setErrorMsg("Please fill in both name and message.");
+    if (!session) {
+      toast.error("Please log in to comment.");
       return;
     }
 
-    setSubmitting(true);
+    if (!message.trim()) {
+      toast.error("Comment cannot be empty.");
+      return;
+    }
 
     try {
-      // Call your API to add a comment to this blog post
-      // Adjust URL and method to your backend implementation
-      const res = await fetch(`/api/blogs/${id}/comments`, {
-        method: "POST",
+      setIsSubmitting(true);
+      const res = await fetch(`/api/blogs/${id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), message: message.trim() }),
+        body: JSON.stringify({ message }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to submit comment");
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Comment added!");
+        setMessage("");
+        refetch(); 
+      } else {
+        toast.error(data.error || "Something went wrong.");
       }
-
-      // Reset form
-      setName("");
-      setMessage("");
-      setSuccessMsg("Comment added successfully!");
-
-      // Refresh comments by refetching blog data
-      refetch();
-    } catch (error) {
-      setErrorMsg(error.message || "Something went wrong");
+    } catch (err) {
+      toast.error("Failed to submit comment.");
+      console.error(err);
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
-  }
-
-  if (isLoading)
-    return <div className="text-center py-10 text-gray-600">Loading...</div>;
-  if (isError || !post)
-    return (
-      <div className="text-center text-red-500 py-10 font-semibold">
-        Blog not found.
-      </div>
-    );
+  };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-md shadow-md">
-      {/* Title */}
-      <h1 className="text-4xl font-extrabold mb-6 text-gray-900">
-        {post.title}
-      </h1>
+    <div className="max-w-4xl mx-auto p-4">
+     
+      <h1 className="text-4xl font-bold mb-4 text-gray-800">{post.title}</h1>
 
-      {/* Author + Date */}
-      <div className="text-sm text-gray-500 mb-8">
+   
+      <div className="text-sm text-gray-500 mb-4">
         By <span className="font-semibold">{post.author}</span> •{" "}
         {new Date(post.date).toLocaleDateString()}
       </div>
 
-      {/* Content */}
-      <div className="prose max-w-none text-gray-800 whitespace-pre-line mb-10">
+  
+      <div className="prose max-w-none text-gray-800 whitespace-pre-line mb-6">
         {post.content}
       </div>
 
-      {/* Tags */}
+
       {post.tags?.length > 0 && (
-        <div className="flex gap-3 flex-wrap mb-12">
+        <div className="flex gap-2 flex-wrap mb-8">
           {post.tags.map((tag, idx) => (
             <span
               key={idx}
-              className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full cursor-default select-none"
+              className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full"
             >
               #{tag}
             </span>
@@ -96,96 +92,56 @@ export default function BlogDetail() {
         </div>
       )}
 
-      {/* Comments Section */}
-      <section className="border-t pt-8">
-        <h2 className="text-3xl font-semibold mb-6 text-gray-900">Comments</h2>
+ 
+      <div className="mt-8 border-t pt-4">
+        <h2 className="text-2xl font-semibold mb-4">Comments</h2>
 
         {post.comments?.length > 0 ? (
-          <ul className="space-y-6 mb-12">
+          <ul className="space-y-4">
             {post.comments.map((comment, idx) => (
-              <li
-                key={idx}
-                className="bg-gray-50 p-5 rounded-md border border-gray-200"
-              >
-                <p className="font-semibold text-gray-900">{comment.name}</p>
-                <p className="mt-1 text-gray-700">{comment.message}</p>
-                <p className="mt-2 text-xs text-gray-400 italic">
+              <li key={idx} className="bg-gray-100 p-3 rounded">
+                <p className="font-semibold text-gray-800">{comment.name}</p>
+                <p className="text-gray-700">{comment.message}</p>
+                <p className="text-xs text-gray-500">
                   {new Date(comment.date).toLocaleString()}
                 </p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-gray-600 mb-12">No comments yet. Be the first!</p>
+          <p className="text-gray-600">No comments yet.</p>
         )}
 
-        {/* Add Comment Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="max-w-xl mx-auto bg-gray-50 p-6 rounded-md border border-gray-200"
-        >
-          <h3 className="text-xl font-semibold mb-4 text-gray-900">
-            Add a Comment
-          </h3>
 
-          {errorMsg && (
-            <p className="mb-4 text-red-600 font-medium">{errorMsg}</p>
-          )}
-          {successMsg && (
-            <p className="mb-4 text-green-600 font-medium">{successMsg}</p>
-          )}
-
-          <div className="mb-4">
-            <label
-              htmlFor="name"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={submitting}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Your name"
-              required
-            />
-          </div>
-
-          <div className="mb-6">
-            <label
-              htmlFor="message"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Comment
-            </label>
+        {session ? (
+          <form onSubmit={handleSubmit} className="mt-6 space-y-3">
             <textarea
-              id="message"
-              rows={4}
+              name="message"
+              className="w-full border p-2 rounded resize-none"
+              rows={3}
+              placeholder="Write a comment..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              disabled={submitting}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Write your comment here"
-              required
-            ></textarea>
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className={`w-full py-3 rounded-md text-white font-semibold transition ${
-              submitting
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {submitting ? "Submitting..." : "Submit Comment"}
-          </button>
-        </form>
-      </section>
+              disabled={isSubmitting}
+            />
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Add Comment"}
+            </button>
+          </form>
+        ) : (
+          <p className="text-gray-500 mt-4">
+            Please{" "}
+            <a href="/api/auth/signin" className="text-blue-600 underline">
+              log in
+            </a>{" "}
+            to write a comment.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

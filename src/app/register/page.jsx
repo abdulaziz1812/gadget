@@ -14,9 +14,11 @@ import { Label } from "@/components/ui/label";
 import { useRegisterUserMutation } from "@/src/redux/api/api";
 import toast, { Toaster } from "react-hot-toast";
 import SocialLogin from "../components/SocialLogin";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [registerUser] = useRegisterUserMutation();
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,9 +27,20 @@ export default function RegisterPage() {
     const email = form.email.value;
     const password = form.password.value;
 
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+
+    if (!passwordRegex.test(password)) {
+      toast.error(
+        "Password must be at least 6 characters, include one uppercase, one lowercase, and one special character."
+      );
+      return;
+    }
+
     try {
       await registerUser({ name, email, password }).unwrap();
       toast.success("Registered successfully!");
+      router.push("/login");
       form.reset();
     } catch (err) {
       toast.error("Failed to register!");
@@ -45,24 +58,23 @@ export default function RegisterPage() {
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
-              <div>
+              <div className="grid gap-2">
                 <Label htmlFor="name">Name</Label>
                 <Input id="name" name="name" required />
               </div>
-              <div>
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" name="email" type="email" required />
               </div>
-              <div>
+              <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" required />
               </div>
-              <CardFooter className="p-0 pt-4 flex flex-col gap-2">
                 <Button type="submit" className="w-full">
                   Register
                 </Button>
-               <SocialLogin/>
-              </CardFooter>
+                <SocialLogin />
+              
             </div>
           </form>
         </CardContent>

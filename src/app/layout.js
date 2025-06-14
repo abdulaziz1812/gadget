@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 
 import ReduxProvider from "./components/Provider/ReduxProvider";
 import NextAuthProvider from "./components/Provider/NextAuthProvider";
+import Footer from "./components/Footer";
 
 
 const geistSans = Geist({
@@ -32,7 +33,10 @@ export default function RootLayout({ children }) {
           <Toaster position="top-center" />
           <ReduxProvider>
             <Navbar />
+            <div className="min-h-screen">
             {children}
+            </div>
+            <Footer/>
           </ReduxProvider>
         </NextAuthProvider>
       </body>

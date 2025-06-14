@@ -78,17 +78,24 @@ export default function LoginPage() {
                     Forgot password?
                   </a>
                 </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                />
+                <Input id="password" name="password" type="password" required />
               </div>
               <Button type="submit" className="w-full mt-4">
                 Login
               </Button>
-             <SocialLogin/>
+              <SocialLogin />
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  document.getElementById("email").value = "admin@gadget.com";
+                  document.getElementById("password").value = "123456Az!";
+                }}
+              >
+                Fill Test Credentials
+              </Button>
             </div>
           </form>
         </CardContent>
